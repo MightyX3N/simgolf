@@ -1,0 +1,14 @@
+[package]
+name = "export-pack"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-or-later"
+description = "Turns a SimGolf-layout asset folder (OpenSGolf's free set, or an original install) into a simgolf asset pack"
+publish = false
+
+[dependencies]
+# OpenSGolf's decoders (FLC, PCX, TGA, BMP, sounds) and PNG writer
+sg-core = { git = "https://github.com/crspytopgn/opensgolf", tag = "v0.6.10" }
+
+[profile.release]
+opt-level = 3
