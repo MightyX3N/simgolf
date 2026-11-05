@@ -1,0 +1,11 @@
+"simgolf"
+{
+	"base"			"base"
+	"title"			"SimGolf (working title)"
+	"maps"			""
+	"menusystem"	"1"
+	"workshopid"	""
+	"settings"
+	{
+	}
+}
