@@ -1,12 +1,15 @@
 -- Smoke test of the built GMod gamemode against stand-ins for GMod's API, for checking without Garry's Mod:
 --
 --   python tools/build.py gmod
---   luajit tests/gmod_smoke.lua dist/gmod/ client
---   luajit tests/gmod_smoke.lua dist/gmod/ server
+--   luajit tests/gmod_smoke.lua dist/gmod/simgolf/ client
+--   luajit tests/gmod_smoke.lua dist/gmod/simgolf/ server
+--
+-- The argument is the built addon (gamemodes/, materials/, sound/ inside it).
 --
 -- The stand-ins only record calls; this proves the files load, every Platform function exists and a frame draws.
 -- It does not prove GMod draws it right: that needs the game.
-local ROOT = arg[1]
+local ADDON = arg[1]
+local ROOT = ADDON .. "gamemodes/" -- Lua paths are relative to gamemodes/ for a gamemode
 local REALM = arg[2] or "client"
 local calls = {}
 local function count(name) return function(...) calls[name] = (calls[name] or 0) + 1 end end
@@ -41,7 +44,7 @@ string.GetPathFromFilename = function(p) return p:match("^(.*/)") or "" end
 util = { Compress = function(s) return s end, Decompress = function(s) return s end, TableToJSON = function() return "{}" end, JSONToTable = function() return {} end }
 net = { Receive = function() end }
 ScrW = function() return 1920 end; ScrH = function() return 1080 end
-Material = function(p) assert(exists(ROOT .. "simgolf/content/materials/" .. p), "material missing: " .. p) return { Width = function() return 2048 end, Height = function() return 2048 end } end
+Material = function(p) assert(exists(ADDON .. "materials/" .. p), "material missing: " .. p) return { Width = function() return 2048 end, Height = function() return 2048 end } end
 surface = { SetDrawColor = count("SetDrawColor"), DrawRect = count("DrawRect"), CreateFont = count("CreateFont"), SetMaterial = count("SetMaterial"), DrawTexturedRect = count("DrawTexturedRect"), DrawTexturedRectUV = function(x, y, w, h, u0, v0, u1, v1) calls.DrawTexturedRectUV = (calls.DrawTexturedRectUV or 0) + 1; assert(u0 >= 0 and v0 >= 0 and u1 <= 1 and v1 <= 1 and u0 < u1 and v0 < v1, "texture coordinates out of range") end, PlaySound = count("PlaySound") }
 draw = { SimpleText = count("SimpleText") }
 TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP = 0, 1, 2, 3

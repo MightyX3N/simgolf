@@ -152,7 +152,7 @@ docs/                 plans and notes (never copied into the GMod build)
 LICENSE               GPL-2.0-or-later
 ```
 
-The build copies `core/` + `platform/gmod/` into `dist/gmod/<name>/gamemode/` and skips `.md` files, which the Workshop rejects. The free pack ships inside the gamemode: its pictures and sounds in `content/`, its manifest in `gamemode/packs/free/`.
+The build copies `core/` + `platform/gmod/` into `dist/gmod/<name>/gamemode/` and skips `.md` files, which the Workshop rejects. The GMod build is the Workshop addon as gmpublish takes it: the gamemode in `gamemodes/<name>/`, the free pack's pictures and sounds at the addon root (`materials/`, `sound/`), its manifest in `gamemodes/<name>/gamemode/packs/free/`; the build fails on any file gmad's whitelist refuses.
 
 ## Roadmap
 

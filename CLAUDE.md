@@ -13,13 +13,16 @@ porting a rule, read its Rust source and port it faithfully, then add a parity t
   core/platform.lua's spec, both platforms and tests/headless.lua.
 - No `.md` files inside anything that ends up in the GMod build (the Workshop refuses them); tools/build.py skips them.
 - `packs/free/` is generated (see below); don't edit it by hand.
+- The GMod build is the Workshop addon exactly as gmpublish takes it: code in `gamemodes/simgolf/`, the free pack's
+  pictures and sounds at the addon root (`materials/`, `sound/`). tools/build.py fails on any file gmad's whitelist
+  refuses; keep it that way. Installed for testing in `garrysmod/addons/simgolf/`.
 
 ## Commands (run from the repo root)
 
 ```
 luajit tests/run.lua                      core tests (headless platform, real packs/); filter: luajit tests/run.lua terrain
-python3 tools/build.py                    dist/gmod/simgolf/ and dist/love/ + dist/simgolf.love
-luajit tests/gmod_smoke.lua dist/gmod/ client   built gamemode against stand-ins for GMod's API (also: server)
+python3 tools/build.py                    dist/gmod/simgolf/ (the Workshop addon) and dist/love/ + dist/simgolf.love
+luajit tests/gmod_smoke.lua dist/gmod/simgolf/ client   built addon against stand-ins for GMod's API (also: server)
 python3 tools/screenshot.py out.png --view X,Z,ZOOM,ROT   LÖVE screenshot (uses xvfb-run on a headless Linux box)
 ```
 

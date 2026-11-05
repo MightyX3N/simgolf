@@ -37,7 +37,7 @@ Needs Python 3.8+.
 
 ```
 python tools/build.py          # both
-python tools/build.py gmod     # dist/gmod/simgolf/  -> copy to garrysmod/gamemodes/simgolf/
+python tools/build.py gmod     # dist/gmod/simgolf/  -> copy to garrysmod/addons/simgolf/ (also what gets uploaded)
 python tools/build.py love     # dist/love/ and dist/simgolf.love -> run with LÖVE 11.4+
 ```
 
@@ -48,7 +48,7 @@ Controls: WASD, the arrow keys or dragging move the view, the wheel zooms, Q and
 
 ```
 luajit tests/run.lua                             # core tests, including parity with OpenSGolf's demo course
-luajit tests/gmod_smoke.lua dist/gmod/ client    # the built gamemode against stand-ins for GMod's API (also: server)
+luajit tests/gmod_smoke.lua dist/gmod/simgolf/ client   # the built addon against stand-ins for GMod's API (also: server)
 ```
 
 More for developers in [CLAUDE.md](CLAUDE.md).

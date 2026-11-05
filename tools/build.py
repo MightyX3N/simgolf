@@ -2,12 +2,14 @@
 """Assemble the Garry's Mod gamemode and the LÖVE game from the shared source.
 
     python tools/build.py          build both
-    python tools/build.py gmod     dist/gmod/simgolf/   (copy into garrysmod/gamemodes/)
+    python tools/build.py gmod     dist/gmod/simgolf/   (the Workshop addon; copy into garrysmod/addons/)
     python tools/build.py love     dist/love/  and  dist/simgolf.love
 
 Works on Windows and Linux with Python 3.8+. No dependencies.
 """
 
+import json
+import re
 import shutil
 import sys
 import zipfile
@@ -41,18 +43,56 @@ def fresh(path: Path) -> Path:
     return path
 
 
+# gmad's upload whitelist (github.com/garrynewman/gmad, include/AddonWhiteList.h), in order: a "!" entry cancels
+# earlier matches. "*" matches any characters, "/" included. Every file in the GMod build must pass it.
+GMAD_WHITELIST = [
+    "lua/*.lua", "scenes/*.vcd", "particles/*.pcf", "resource/fonts/*.ttf", "scripts/vehicles/*.txt",
+    "resource/localization/*/*.properties", "maps/*.bsp", "maps/*.lmp", "maps/*.nav", "maps/*.ain", "maps/thumb/*.png",
+    "sound/*.wav", "sound/*.mp3", "sound/*.ogg", "materials/*.vmt", "materials/*.vtf", "materials/*.png",
+    "materials/*.jpg", "materials/*.jpeg", "materials/colorcorrection/*.raw", "models/*.mdl", "models/*.phy",
+    "models/*.ani", "models/*.vvd", "models/*.vtx", "!models/*.sw.vtx", "!models/*.360.vtx", "!models/*.xbox.vtx",
+    "gamemodes/*/*.txt", "!gamemodes/*/*/*.txt", "gamemodes/*/*.fgd", "!gamemodes/*/*/*.fgd", "gamemodes/*/logo.png",
+    "gamemodes/*/icon24.png", "gamemodes/*/gamemode/*.lua", "gamemodes/*/entities/effects/*.lua",
+    "gamemodes/*/entities/weapons/*.lua", "gamemodes/*/entities/entities/*.lua", "gamemodes/*/backgrounds/*.png",
+    "gamemodes/*/backgrounds/*.jpg", "gamemodes/*/backgrounds/*.jpeg", "data_static/*.txt", "data_static/*.dat",
+    "data_static/*.json", "data_static/*.xml", "data_static/*.csv", "shaders/fxc/*.vcs",
+]
+
+
+def gmad_allows(rel: str) -> bool:
+    ok = False
+    for pattern in GMAD_WHITELIST:
+        neg = pattern.startswith("!")
+        regex = "^" + re.escape(pattern.lstrip("!")).replace(r"\*", ".*") + "$"
+        if re.match(regex, rel.lower()):
+            ok = not neg
+    return ok
+
+
 def build_gmod() -> None:
+    """The Workshop addon: the gamemode's code under gamemodes/<id>/, the free pack's pictures and sounds at the addon
+    root (materials/, sound/), as gmpublish takes it. Install by copying dist/gmod/<id>/ to garrysmod/addons/<id>/."""
     out = fresh(DIST / "gmod" / GAME_ID)
-    n = copy_tree(ROOT / "gmod", out)
-    n += copy_tree(ROOT / "core", out / "gamemode" / "core")
-    n += copy_tree(ROOT / "platform" / "gmod", out / "gamemode" / "platform" / "gmod")
-    # The free pack ships inside the gamemode: its pictures and sounds in content/ (mounted while the gamemode runs),
-    # its manifest in gamemode/packs/free/. Other packs are separate addons in the same layout as packs/<id>/.
+    gm = out / "gamemodes" / GAME_ID
+    n = copy_tree(ROOT / "gmod", gm)
+    n += copy_tree(ROOT / "core", gm / "gamemode" / "core")
+    n += copy_tree(ROOT / "platform" / "gmod", gm / "gamemode" / "platform" / "gmod")
     free = ROOT / "packs" / "free"
-    n += copy_tree(free / "materials", out / "content" / "materials")
-    n += copy_tree(free / "sound", out / "content" / "sound")
-    n += copy_tree(free / "lua" / GAME_ID / "packs" / "free", out / "gamemode" / "packs" / "free")
-    print(f"gmod: {n} files -> {out.relative_to(ROOT)}")
+    n += copy_tree(free / "materials", out / "materials")
+    n += copy_tree(free / "sound", out / "sound")
+    n += copy_tree(free / "lua" / GAME_ID / "packs" / "free", gm / "gamemode" / "packs" / "free")
+    (out / "addon.json").write_text(json.dumps({
+        "title": "SimGolf (working title)",
+        "type": "gamemode",
+        "tags": ["fun", "build"],
+        "ignore": [],
+    }, indent="\t") + "\n", encoding="utf-8")
+
+    bad = [r for r in (p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file())
+           if r != "addon.json" and not gmad_allows(r)]
+    if bad:
+        raise SystemExit("files gmad would refuse:\n  " + "\n  ".join(bad[:50]))
+    print(f"gmod: {n + 1} files -> {out.relative_to(ROOT)} (all pass gmad's whitelist)")
 
 
 def build_love() -> None:
