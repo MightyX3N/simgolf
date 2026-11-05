@@ -42,7 +42,7 @@ util = { Compress = function(s) return s end, Decompress = function(s) return s 
 net = { Receive = function() end }
 ScrW = function() return 1920 end; ScrH = function() return 1080 end
 Material = function(p) assert(exists(ROOT .. "simgolf/content/materials/" .. p), "material missing: " .. p) return { Width = function() return 2048 end, Height = function() return 2048 end } end
-surface = { SetDrawColor = count("SetDrawColor"), DrawRect = count("DrawRect"), CreateFont = count("CreateFont"), SetMaterial = count("SetMaterial"), DrawTexturedRect = count("DrawTexturedRect"), DrawTexturedRectUV = count("DrawTexturedRectUV"), PlaySound = count("PlaySound") }
+surface = { SetDrawColor = count("SetDrawColor"), DrawRect = count("DrawRect"), CreateFont = count("CreateFont"), SetMaterial = count("SetMaterial"), DrawTexturedRect = count("DrawTexturedRect"), DrawTexturedRectUV = function(x, y, w, h, u0, v0, u1, v1) calls.DrawTexturedRectUV = (calls.DrawTexturedRectUV or 0) + 1; assert(u0 >= 0 and v0 >= 0 and u1 <= 1 and v1 <= 1 and u0 < u1 and v0 < v1, "texture coordinates out of range") end, PlaySound = count("PlaySound") }
 draw = { SimpleText = count("SimpleText") }
 TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP = 0, 1, 2, 3
 KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE, KEY_ESCAPE, KEY_ENTER, KEY_TAB = 88, 90, 89, 91, 65, 70, 64, 67

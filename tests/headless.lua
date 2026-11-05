@@ -67,7 +67,7 @@ return function(root)
 	function P.loadImage(path) return { path = path } end
 	function P.imageSize() return 0, 0 end
 	function P.drawImage() P.draws.images = P.draws.images + 1 end
-	function P.drawImageRect() P.draws.images = P.draws.images + 1 end
+	function P.drawImageUV() P.draws.images = P.draws.images + 1 end
 	function P.drawRect() P.draws.rects = P.draws.rects + 1 end
 	function P.drawText() P.draws.texts = P.draws.texts + 1 end
 	function P.newMesh(img, verts) return { img = img, n = #verts / 8 } end

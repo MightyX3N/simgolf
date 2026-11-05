@@ -27,8 +27,10 @@ return function(Game)
 
 	local function drawFrame(entry, path, frame, sx, sy, zoom, r, g, b, a)
 		local f = floor(frame) % entry.frames
-		local col, row = f % entry.cols, floor(f / entry.cols)
-		P.drawImageRect(image(path), col * entry.w, row * entry.h, entry.w, entry.h,
+		local px, py = (f % entry.cols) * entry.w, floor(f / entry.cols) * entry.h
+		-- the sheet's size from the manifest, not the loaded picture's (GMod may report another size)
+		local sw, sh = entry.sheetW, entry.sheetH
+		P.drawImageUV(image(path), px / sw, py / sh, (px + entry.w) / sw, (py + entry.h) / sh,
 			sx - entry.ax * zoom, sy - entry.ay * zoom, entry.w * zoom, entry.h * zoom, r, g, b, a)
 	end
 

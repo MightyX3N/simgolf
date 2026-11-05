@@ -102,8 +102,9 @@ return function(id)
 	end
 
 	local quad = nil
-	function P.drawImageRect(img, sx, sy, sw, sh, x, y, w, h, r, g, b, a)
+	function P.drawImageUV(img, u0, v0, u1, v1, x, y, w, h, r, g, b, a)
 		local iw, ih = img:getDimensions()
+		local sx, sy, sw, sh = u0 * iw, v0 * ih, (u1 - u0) * iw, (v1 - v0) * ih
 		if quad then quad:setViewport(sx, sy, sw, sh, iw, ih) else quad = lg.newQuad(sx, sy, sw, sh, iw, ih) end
 		setColor(r, g, b, a)
 		lg.draw(img, quad, x, y, 0, w / sw, h / sh)

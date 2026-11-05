@@ -134,11 +134,12 @@ return function(id, gamemodeRoot)
 		surface.DrawTexturedRect(x, y, w, h)
 	end
 
-	function P.drawImageRect(img, sx, sy, sw, sh, x, y, w, h, r, g, b, a)
-		local iw, ih = img:Width(), img:Height()
+	-- texture coordinates, not pixels: GMod resizes pictures whose sides are not powers of two, so a material's size
+	-- can differ from its file's (the packs' sheets are powers of two, so nothing is resized)
+	function P.drawImageUV(img, u0, v0, u1, v1, x, y, w, h, r, g, b, a)
 		surface.SetDrawColor(r or 255, g or 255, b or 255, a or 255)
 		surface.SetMaterial(img)
-		surface.DrawTexturedRectUV(x, y, w, h, sx / iw, sy / ih, (sx + sw) / iw, (sy + sh) / ih)
+		surface.DrawTexturedRectUV(x, y, w, h, u0, v0, u1, v1)
 	end
 
 	function P.drawRect(x, y, w, h, r, g, b, a)

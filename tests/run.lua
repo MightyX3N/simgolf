@@ -158,8 +158,11 @@ test("pack: sprite sheets have the size their manifest says", function()
 	for key, s in pairs(Packs.get("free").sprites) do
 		local w, h = pngSize(impl.imageFile("free/" .. s.file))
 		assert(w, "missing sheet for " .. key)
-		eq(w, s.cols * s.w, key .. " width")
-		eq(h, math.ceil(s.frames / s.cols) * s.h, key .. " height")
+		eq(w, s.sheetW, key .. " width"); eq(h, s.sheetH, key .. " height")
+		-- powers of two (GMod resizes anything else), big enough for every frame
+		local function pow2(n) return n > 0 and 2 ^ math.floor(math.log(n) / math.log(2) + 0.5) == n end
+		assert(pow2(w) and pow2(h), key .. " sheet " .. w .. " x " .. h .. " is not a power of two")
+		assert(w >= s.cols * s.w and h >= math.ceil(s.frames / s.cols) * s.h, key .. " frames fit")
 		eq(s.frames, s.views * s.fpv, key .. " frames")
 		checked = checked + 1
 	end

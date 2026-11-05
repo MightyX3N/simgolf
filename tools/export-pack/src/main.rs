@@ -8,7 +8,8 @@
 //! Output, with <id> the pack id:
 //!   materials/simgolf/<id>/terrain/<theme>.png        one 2048 x 2048 atlas of the theme's 64 x 64 ground textures
 //!   materials/simgolf/<id>/terrain/<theme>/<name>.png  the theme's path and wall overlays (TGA)
-//!   materials/simgolf/<id>/sprites/<folder>/<name>.png one sheet per FLC sprite: a row per view, a column per frame
+//!   materials/simgolf/<id>/sprites/<folder>/<name>.png one sheet per FLC sprite: a row per view, a column per frame,
+//!                                                      padded to power-of-two sizes
 //!   sound/simgolf/<id>/<folder>/.../<name>.ogg|mp3|wav  OGG and MP3 copied as they are, other sounds as PCM WAV
 //!   lua/simgolf/packs/<id>/*.lua                       the manifest: info, terrain, sounds, sprites/<folder>
 //!
@@ -268,6 +269,8 @@ fn export_terrain(a: &Args, lua: &mut String) -> usize {
 
 struct Sprite {
     file: String,
+    sheet_w: u32,
+    sheet_h: u32,
     w: u32,
     h: u32,
     views: u32,
@@ -322,7 +325,12 @@ fn export_sprite(a: &Args, path: &Path, key: &str) -> Option<Sprite> {
     let (w, h) = (flc.w, flc.h);
     let cols = fpv.min((MAX_SHEET / w).max(1)).max(1);
     let rows = n.div_ceil(cols);
-    let mut sheet = Rgba::new(cols * w, rows * h);
+    // power-of-two sheets: GMod resizes any other size, which blurs the frames and moves them
+    let (sheet_w, sheet_h) = ((cols * w).next_power_of_two(), (rows * h).next_power_of_two());
+    if sheet_w > MAX_SHEET || sheet_h > MAX_SHEET {
+        eprintln!("sprite: {} is {sheet_w} x {sheet_h}, over {MAX_SHEET}", path.display());
+    }
+    let mut sheet = Rgba::new(sheet_w, sheet_h);
     for (i, f) in flc.frames.iter().enumerate() {
         let (fx, fy) = ((i as u32 % cols) * w, (i as u32 / cols) * h);
         let px = frame_rgba(f, shadow);
@@ -336,7 +344,7 @@ fn export_sprite(a: &Args, path: &Path, key: &str) -> Option<Sprite> {
     let file = format!("sprites/{key}.png");
     write_png(&a.out.join(format!("materials/{GAME}/{}/{file}", a.id)), &sheet);
     let (ax, ay) = if flc.has_ext { (240 - flc.crop_x as i32, 240 - flc.crop_y as i32) } else { (w as i32 / 2, h as i32) };
-    Some(Sprite { file, w, h, views, fpv, frames: n, cols, ax, ay, ms: flc.frame_ms, mask: if flc.has_ext { flc.view_mask } else { 1 } })
+    Some(Sprite { file, sheet_w, sheet_h, w, h, views, fpv, frames: n, cols, ax, ay, ms: flc.frame_ms, mask: if flc.has_ext { flc.view_mask } else { 1 } })
 }
 
 fn export_sprites(a: &Args) -> usize {
@@ -361,7 +369,8 @@ fn export_sprites(a: &Args) -> usize {
         // files are kept under MAX_MANIFEST bytes (GMod sends each Lua file to clients on its own), split as folder_2.lua...
         let header = format!(
             "-- Sprites from Flics/{folder}. Sheet: frame f (0-based, view-major: f = view * fpv + frame) is at\n\
-             -- column f % cols, row floor(f / cols), w x h each. ax, ay: the ground point inside a frame. ms: frame time.\n\
+             -- column f % cols, row floor(f / cols), w x h each, in a sheetW x sheetH picture (power-of-two sizes).\n\
+             -- ax, ay: the ground point inside a frame. ms: frame time.\n\
              -- mask: bit set per stored view. shadow: key of the matching shadow sprite (drawn first, black with alpha).\n\
              return {{\n"
         );
@@ -382,8 +391,8 @@ fn export_sprites(a: &Args) -> usize {
             let shadow = if sprites.contains_key(&shadow_key) { format!(", shadow = {}", lua_str(&shadow_key)) } else { String::new() };
             let _ = writeln!(
                 lua,
-                "\t[{}] = {{ file = {}, w = {}, h = {}, views = {}, fpv = {}, frames = {}, cols = {}, ax = {}, ay = {}, ms = {}, mask = {}{} }},",
-                lua_str(key), lua_str(&s.file), s.w, s.h, s.views, s.fpv, s.frames, s.cols, s.ax, s.ay, s.ms, s.mask, shadow
+                "\t[{}] = {{ file = {}, sheetW = {}, sheetH = {}, w = {}, h = {}, views = {}, fpv = {}, frames = {}, cols = {}, ax = {}, ay = {}, ms = {}, mask = {}{} }},",
+                lua_str(key), lua_str(&s.file), s.sheet_w, s.sheet_h, s.w, s.h, s.views, s.fpv, s.frames, s.cols, s.ax, s.ay, s.ms, s.mask, shadow
             );
             count += 1;
         }
