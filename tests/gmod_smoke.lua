@@ -54,8 +54,9 @@ input = { IsKeyDown = function(c) return down[c] end, GetKeyName = function(c) r
 gui = { MouseX = function() return 960 end, MouseY = function() return 540 end }
 function Vector(x, y, z) return { x, y, z } end
 function Matrix() return { Translate = function() end, Scale = function() end } end
-cam = { PushModelMatrix = count("PushModelMatrix"), PopModelMatrix = count("PopModelMatrix") }
-render = { SetMaterial = count("SetMaterial3D"), CullMode = count("CullMode") }
+cam = { PushModelMatrix = count("PushModelMatrix"), PopModelMatrix = count("PopModelMatrix"), IgnoreZ = count("IgnoreZ") }
+ErrorNoHalt = function(m) error(m) end
+render = { SetMaterial = count("SetMaterial3D"), CullMode = count("CullMode"), OverrideDepthEnable = count("OverrideDepthEnable") }
 local verts = 0
 function Mesh() return { Draw = count("MeshDraw"), Destroy = function() end } end
 mesh = { Begin = function(_, kind, prims) assert(kind == MATERIAL_TRIANGLES and prims == math.floor(prims) and prims <= 8000, "prims " .. prims) end,

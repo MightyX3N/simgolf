@@ -24,7 +24,14 @@ local function openView()
 	panel:SetMouseInputEnabled(true)
 
 	function panel:Paint(w, h)
-		App:draw(w, h)
+		-- Draw with no depth test or depth writes: everything is drawn far to near at z = 0, and with the depth buffer on
+		-- a sprite's see-through corners hide parts of the sprites drawn after it.
+		cam.IgnoreZ(true)
+		render.OverrideDepthEnable(true, false)
+		local ok, err = pcall(App.draw, App, w, h)
+		render.OverrideDepthEnable(false, false)
+		cam.IgnoreZ(false)
+		if not ok then ErrorNoHalt("[simgolf] draw: " .. tostring(err) .. "\n") end
 		return true
 	end
 
