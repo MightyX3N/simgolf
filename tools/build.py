@@ -46,6 +46,12 @@ def build_gmod() -> None:
     n = copy_tree(ROOT / "gmod", out)
     n += copy_tree(ROOT / "core", out / "gamemode" / "core")
     n += copy_tree(ROOT / "platform" / "gmod", out / "gamemode" / "platform" / "gmod")
+    # The free pack ships inside the gamemode: its pictures and sounds in content/ (mounted while the gamemode runs),
+    # its manifest in gamemode/packs/free/. Other packs are separate addons in the same layout as packs/<id>/.
+    free = ROOT / "packs" / "free"
+    n += copy_tree(free / "materials", out / "content" / "materials")
+    n += copy_tree(free / "sound", out / "content" / "sound")
+    n += copy_tree(free / "lua" / GAME_ID / "packs" / "free", out / "gamemode" / "packs" / "free")
     print(f"gmod: {n} files -> {out.relative_to(ROOT)}")
 
 
@@ -54,12 +60,15 @@ def build_love() -> None:
     n = copy_tree(ROOT / "love", out)
     n += copy_tree(ROOT / "core", out / "core")
     n += copy_tree(ROOT / "platform" / "love", out / "platform" / "love")
+    n += copy_tree(ROOT / "packs", out / "packs")
 
     packed = DIST / f"{GAME_ID}.love"
     with zipfile.ZipFile(packed, "w", zipfile.ZIP_DEFLATED) as z:
         for path in sorted(out.rglob("*")):
             if path.is_file():
-                z.write(path, path.relative_to(out).as_posix())
+                # pictures and sounds are already compressed
+                kind = zipfile.ZIP_STORED if path.suffix.lower() in {".png", ".jpg", ".ogg", ".mp3"} else zipfile.ZIP_DEFLATED
+                z.write(path, path.relative_to(out).as_posix(), compress_type=kind)
     print(f"love: {n} files -> {out.relative_to(ROOT)} and {packed.relative_to(ROOT)}")
 
 

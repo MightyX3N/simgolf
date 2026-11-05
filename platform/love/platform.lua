@@ -4,6 +4,7 @@
 
 return function(id)
 	local P = { name = "love" }
+	local lg = love.graphics
 
 	function P.isServer() return true end
 	function P.isClient() return true end
@@ -30,22 +31,57 @@ return function(id)
 		return love.filesystem.getInfo(path) ~= nil
 	end
 
-	function P.screenSize()
-		return love.graphics.getDimensions()
-	end
+	------------------------------------------------------------------------------------------------ packs
 
-	-- Packs keep their GMod addon layout inside packs/<pack>/, so a path such as "free/terrain/fairway.png"
-	-- is read from packs/free/materials/<id>/free/terrain/fairway.png (sounds: packs/free/sound/<id>/...).
+	-- Packs keep their GMod addon layout inside packs/<pack>/: manifests in lua/<id>/packs/<pack>/, pictures in
+	-- materials/<id>/<pack>/, sounds in sound/<id>/<pack>/. A path such as "free/terrain/parkland.png" names
+	-- packs/free/materials/<id>/free/terrain/parkland.png.
 	local function packFile(kind, path)
 		local pack = path:match("^([^/]+)/") or path
 		return "packs/" .. pack .. "/" .. kind .. "/" .. id .. "/" .. path
+	end
+
+	local function manifestDir(pack)
+		return "packs/" .. pack .. "/lua/" .. id .. "/packs/" .. pack
+	end
+
+	function P.listPacks()
+		local out = {}
+		for _, name in ipairs(love.filesystem.getDirectoryItems("packs")) do
+			if love.filesystem.getInfo(manifestDir(name) .. "/info.lua", "file") then out[#out + 1] = name end
+		end
+		table.sort(out)
+		return out
+	end
+
+	function P.findPackFiles(pack, sub)
+		local out = {}
+		for _, name in ipairs(love.filesystem.getDirectoryItems(manifestDir(pack) .. "/" .. sub)) do
+			if name:sub(-4) == ".lua" then out[#out + 1] = name end
+		end
+		table.sort(out)
+		return out
+	end
+
+	function P.loadPackFile(pack, path)
+		local file = manifestDir(pack) .. "/" .. path
+		if not love.filesystem.getInfo(file, "file") then return nil end
+		return love.filesystem.load(file)()
+	end
+
+	------------------------------------------------------------------------------------------------ drawing
+
+	function P.screenSize()
+		return lg.getDimensions()
 	end
 
 	local images = {}
 	function P.loadImage(path)
 		local img = images[path]
 		if not img then
-			img = love.graphics.newImage(packFile("materials", path))
+			img = lg.newImage(packFile("materials", path), { mipmaps = true })
+			img:setFilter("linear", "linear")
+			img:setMipmapFilter("linear")
 			images[path] = img
 		end
 		return img
@@ -56,18 +92,26 @@ return function(id)
 	end
 
 	local function setColor(r, g, b, a)
-		love.graphics.setColor((r or 255) / 255, (g or 255) / 255, (b or 255) / 255, (a or 255) / 255)
+		lg.setColor((r or 255) / 255, (g or 255) / 255, (b or 255) / 255, (a or 255) / 255)
 	end
 
 	function P.drawImage(img, x, y, w, h, r, g, b, a)
 		local iw, ih = img:getDimensions()
 		setColor(r, g, b, a)
-		love.graphics.draw(img, x, y, 0, w / iw, h / ih)
+		lg.draw(img, x, y, 0, w / iw, h / ih)
+	end
+
+	local quad = nil
+	function P.drawImageRect(img, sx, sy, sw, sh, x, y, w, h, r, g, b, a)
+		local iw, ih = img:getDimensions()
+		if quad then quad:setViewport(sx, sy, sw, sh, iw, ih) else quad = lg.newQuad(sx, sy, sw, sh, iw, ih) end
+		setColor(r, g, b, a)
+		lg.draw(img, quad, x, y, 0, w / sw, h / sh)
 	end
 
 	function P.drawRect(x, y, w, h, r, g, b, a)
 		setColor(r, g, b, a)
-		love.graphics.rectangle("fill", x, y, w, h)
+		lg.rectangle("fill", x, y, w, h)
 	end
 
 	local fonts = {}
@@ -75,15 +119,53 @@ return function(id)
 		size = math.floor(size or 16)
 		local f = fonts[size]
 		if not f then
-			f = love.graphics.newFont(size)
+			f = lg.newFont(size)
 			fonts[size] = f
 		end
 		text = tostring(text)
 		local w = f:getWidth(text)
 		if alignX == 1 then x = x - w / 2 elseif alignX == 2 then x = x - w end
-		love.graphics.setFont(f)
+		lg.setFont(f)
 		setColor(r, g, b, a)
-		love.graphics.print(text, math.floor(x), math.floor(y))
+		lg.print(text, math.floor(x), math.floor(y))
+	end
+
+	local FORMAT = { { "VertexPosition", "float", 2 }, { "VertexTexCoord", "float", 2 }, { "VertexColor", "byte", 4 } }
+	function P.newMesh(img, verts)
+		local list = {}
+		for i = 1, #verts, 8 do
+			list[#list + 1] = { verts[i], verts[i + 1], verts[i + 2], verts[i + 3],
+				verts[i + 4] / 255, verts[i + 5] / 255, verts[i + 6] / 255, verts[i + 7] / 255 }
+		end
+		local mesh = lg.newMesh(FORMAT, list, "triangles", "static")
+		mesh:setTexture(img)
+		return mesh
+	end
+
+	function P.drawMesh(mesh)
+		lg.setColor(1, 1, 1, 1)
+		lg.draw(mesh)
+	end
+
+	function P.freeMesh(mesh)
+		mesh:release()
+	end
+
+	function P.pushTransform(tx, ty, s)
+		lg.push()
+		lg.translate(tx, ty)
+		lg.scale(s, s)
+	end
+
+	function P.popTransform()
+		lg.pop()
+	end
+
+	------------------------------------------------------------------------------------------------ input, sound, net
+
+	function P.isKeyDown(key)
+		local ok, down = pcall(love.keyboard.isDown, key)
+		return ok and down
 	end
 
 	local sounds = {}

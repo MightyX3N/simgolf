@@ -29,9 +29,23 @@ Platform.spec = {
 	{ "drawImage",   "(image, x, y, w, h, r, g, b, a)", "client" },
 	{ "drawRect",    "(x, y, w, h, r, g, b, a)", "client" },
 	{ "drawText",    "(text, size, x, y, r, g, b, a, alignX) alignX: 0 left, 1 centre, 2 right", "client" },
+	{ "drawImageRect", "(image, sx, sy, sw, sh, x, y, w, h, r, g, b, a) the source rectangle sx, sy, sw, sh in image pixels", "client" },
+	{ "newMesh",     "(image, vertices) -> mesh; vertices: flat x, y, u, v, r, g, b, a per vertex, 3 per triangle", "client" },
+	{ "drawMesh",    "(mesh) drawn under the current transform", "client" },
+	{ "freeMesh",    "(mesh)", "client" },
+	{ "pushTransform", "(tx, ty, scale) until popTransform: screen = position * scale + (tx, ty)", "client" },
+	{ "popTransform", "()", "client" },
+
+	-- input (client only)
+	{ "isKeyDown",   "(key) -> bool; key names as App:keyPressed gets them ('w', 'left', 'space', ...)", "client" },
 
 	-- sound (client only)
 	{ "playSound",   "(path) path inside the active pack, e.g. 'free/sounds/click.wav'", "client" },
+
+	-- asset packs: manifests written by tools/export-pack (lua/simgolf/packs/<id>/ in a pack)
+	{ "listPacks",   "() -> array of installed pack ids" },
+	{ "findPackFiles", "(id, subfolder) -> array of .lua file names in that folder of the pack's manifest" },
+	{ "loadPackFile", "(id, path) -> what the manifest file at path returns, or nil" },
 
 	-- networking: messages are plain Lua tables
 	{ "send",        "(msgName, data, target) server: target = player or nil for everyone; client: to the server" },

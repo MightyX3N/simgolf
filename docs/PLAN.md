@@ -142,14 +142,17 @@ platform/love/        LÖVE layer
 gmod/                 gamemode entry files (init.lua, cl_init.lua, shared.lua, <name>.txt)
 love/                 main.lua, conf.lua, launcher, updater
 packs/free/           free asset pack exported from OpenSGolf
-tools/converter/      LÖVE asset converter app
+tools/converter/      LÖVE asset converter app (Phase 6; tools/export-pack does the same job in Rust for now)
+tools/export-pack/    Rust: OpenSGolf's free set or an original install -> an asset pack
+tools/convert_data.py OpenSGolf's rule tables (TOML) -> core/data/*.lua
+tests/                core tests (LuaJIT) and a GMod smoke test
 tools/build.py        builds dist/gmod/<name>/ and dist/love/ (Python 3, Windows + Linux)
 site/                 project website (GitHub Pages)
 docs/                 plans and notes (never copied into the GMod build)
 LICENSE               GPL-2.0-or-later
 ```
 
-The build copies `core/` + `platform/gmod/` into `dist/gmod/<name>/gamemode/` and skips `.md` files, which the Workshop rejects.
+The build copies `core/` + `platform/gmod/` into `dist/gmod/<name>/gamemode/` and skips `.md` files, which the Workshop rejects. The free pack ships inside the gamemode: its pictures and sounds in `content/`, its manifest in `gamemode/packs/free/`.
 
 ## Roadmap
 
@@ -158,8 +161,8 @@ Each phase ends with something playable or usable; the LÖVE work comes last, bu
 **Phase 1 – Foundation**
 
 - [x] Repo, licence, build script, `Platform` interface
-- [ ] Export the free set with `sgtool freeset` and `sgtool dump-data`; define the pack manifest
-- [ ] 2D isometric renderer in GMod: terrain, camera pan/zoom, sprites from the active pack
+- [x] Export the free set with `sgtool freeset` and `sgtool dump-data`; define the pack manifest
+- [x] 2D isometric renderer: terrain, camera pan/zoom/rotate, sprites from the active pack (checked in LÖVE; GMod still to be tried in the game)
 
 **Phase 2 – Building a course**
 
