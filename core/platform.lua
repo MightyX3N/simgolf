@@ -29,6 +29,8 @@ Platform.spec = {
 	{ "drawImage",   "(image, x, y, w, h, r, g, b, a)", "client" },
 	{ "drawRect",    "(x, y, w, h, r, g, b, a)", "client" },
 	{ "drawText",    "(text, size, x, y, r, g, b, a, alignX) alignX: 0 left, 1 centre, 2 right", "client" },
+	{ "drawPoly",    "(points, r, g, b, a) a filled convex polygon; points: flat x, y list, either winding", "client" },
+	{ "textWidth",   "(text, size) -> width in pixels of drawText's text at that size", "client" },
 	{ "drawImageUV", "(image, u0, v0, u1, v1, x, y, w, h, r, g, b, a) part of an image, texture coordinates 0..1", "client" },
 	{ "newMesh",     "(image, vertices) -> mesh; vertices: flat x, y, u, v, r, g, b, a per vertex, 3 per triangle", "client" },
 	{ "drawMesh",    "(mesh) drawn under the current transform", "client" },

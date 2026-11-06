@@ -83,6 +83,15 @@ return function(Game)
 		if s then return pack.id .. "/" .. s.file, s end
 	end
 
+	-- path of a sound for Platform.playSound ("packid/file"), from the active pack or the base pack
+	function Packs.sound(key)
+		for _, id in ipairs({ Packs.activeId, Packs.baseId }) do
+			local pack = id and Packs.get(id)
+			local f = pack and pack.sounds[key]
+			if f then return pack.id .. "/" .. f end
+		end
+	end
+
 	------------------------------------------------------------------------------------------------ terrain
 
 	-- A theme's texture catalog: files[type][set][variation] = atlas cell, built from the manifest's texture names

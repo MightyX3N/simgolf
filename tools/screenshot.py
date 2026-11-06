@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the LÖVE version and save a screenshot of the course view, without opening a window for long.
 
-    python tools/screenshot.py out.png [--view X,Z,ZOOM,ROT] [--theme parkland] [--seed 7]
+    python tools/screenshot.py out.png [--view X,Z,ZOOM,ROT] [--seed 7] [--slot N] [--sandbox] [--demo]
 
 Needs LÖVE 11.4+ (`love` on the PATH). On Linux without a display it runs under xvfb-run (package xvfb).
 """

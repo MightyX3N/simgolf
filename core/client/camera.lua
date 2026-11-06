@@ -66,6 +66,41 @@ return function(Game)
 		self.z = self.z + a * self.sy + b * self.cy
 	end
 
+	-- the world point (x, z) at height y under base point (bx, by)
+	function Camera:baseToWorld(bx, by, y)
+		local xr = bx / self.k
+		local zr = (by / self.k + y * self.cp) / self.sp
+		return xr * self.cy - zr * self.sy, xr * self.sy + zr * self.cy
+	end
+
+	-- the ground point under screen point (sx, sy): the view ray marched down from `top` until it meets the ground
+	-- (ground(x, z) -> height). Returns x, y, z.
+	function Camera:pick(sx, sy, screenW, screenH, ground, top)
+		local tx, ty, s = self:transform(screenW, screenH)
+		local bx, by = (sx - tx) / s, (sy - ty) / s
+		local step = 4
+		local y = top or 400
+		local px, pz = self:baseToWorld(bx, by, y)
+		while y > -50 do
+			local x, z = self:baseToWorld(bx, by, y)
+			local g = ground(x, z)
+			if g >= y then
+				-- refine between the last point above the ground and this one
+				local lo, hi = y, y + step
+				for _ = 1, 6 do
+					local mid = (lo + hi) * 0.5
+					local mx, mz = self:baseToWorld(bx, by, mid)
+					if ground(mx, mz) >= mid then lo = mid else hi = mid end
+				end
+				local fx, fz = self:baseToWorld(bx, by, lo)
+				return fx, lo, fz
+			end
+			px, pz = x, z
+			y = y - step
+		end
+		return px, 0, pz
+	end
+
 	function Camera:setZoom(z)
 		self.zoom = math.max(Camera.MIN_ZOOM, math.min(Camera.MAX_ZOOM, z))
 	end

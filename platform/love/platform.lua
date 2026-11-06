@@ -115,7 +115,26 @@ return function(id)
 		lg.rectangle("fill", x, y, w, h)
 	end
 
+	function P.drawPoly(points, r, g, b, a)
+		setColor(r, g, b, a)
+		lg.polygon("fill", points)
+	end
+
 	local fonts = {}
+	local function loveFont(size)
+		size = math.floor(size or 16)
+		local f = fonts[size]
+		if not f then
+			f = lg.newFont(size)
+			fonts[size] = f
+		end
+		return f
+	end
+
+	function P.textWidth(text, size)
+		return loveFont(size):getWidth(tostring(text))
+	end
+
 	function P.drawText(text, size, x, y, r, g, b, a, alignX)
 		size = math.floor(size or 16)
 		local f = fonts[size]

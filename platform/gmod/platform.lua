@@ -159,6 +159,30 @@ return function(id, gamemodeRoot)
 		return name
 	end
 
+	-- surface.DrawPoly wants clockwise points (on screen) and no texture
+	function P.drawPoly(points, r, g, b, a)
+		local n = #points / 2
+		local area = 0
+		for i = 0, n - 1 do
+			local j = (i + 1) % n
+			area = area + points[i * 2 + 1] * points[j * 2 + 2] - points[j * 2 + 1] * points[i * 2 + 2]
+		end
+		local poly = {}
+		for i = 0, n - 1 do
+			local k = area >= 0 and i or (n - 1 - i)
+			poly[#poly + 1] = { x = points[k * 2 + 1], y = points[k * 2 + 2] }
+		end
+		draw.NoTexture()
+		surface.SetDrawColor(r, g, b, a or 255)
+		surface.DrawPoly(poly)
+	end
+
+	function P.textWidth(text, size)
+		surface.SetFont(font(size))
+		local w = surface.GetTextSize(tostring(text))
+		return w
+	end
+
 	local ALIGN = { [0] = TEXT_ALIGN_LEFT, [1] = TEXT_ALIGN_CENTER, [2] = TEXT_ALIGN_RIGHT }
 	function P.drawText(text, size, x, y, r, g, b, a, alignX)
 		draw.SimpleText(tostring(text), font(size), x, y, Color(r, g, b, a or 255), ALIGN[alignX or 0], TEXT_ALIGN_TOP)

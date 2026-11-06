@@ -3,8 +3,11 @@
 -- Options (after the game folder or .love file):
 --   --screenshot FILE   draw a few frames, save the window to FILE (PNG, absolute path) and quit
 --   --view X,Z,ZOOM,ROT start the camera at world X, Z with ZOOM and ROT quarter turns
---   --theme NAME        parkland (default), desert, tropical or links
---   --seed N            demo course seed
+--   --seed N            the deal's seed (default: the clock)
+--   --slot N            which of the sixteen offered properties (0..15, default 0)
+--   --sandbox           a sandbox game
+--   --demo              build a hole and some buildings first (for screenshots)
+--   --tool NAME         start with a tool picked: paint, elevation, build
 
 local function loadFile(path)
 	return love.filesystem.load(path)()
@@ -18,8 +21,11 @@ local function parseArgs(args)
 		local a = args[i]
 		if a == "--screenshot" then opts.screenshot, i = args[i + 1], i + 1
 		elseif a == "--view" then opts.view, i = args[i + 1], i + 1
-		elseif a == "--theme" then opts.theme, i = args[i + 1], i + 1
 		elseif a == "--seed" then opts.seed, i = tonumber(args[i + 1]), i + 1
+		elseif a == "--slot" then opts.slot, i = tonumber(args[i + 1]), i + 1
+		elseif a == "--sandbox" then opts.sandbox = true
+		elseif a == "--demo" then opts.demo = true
+		elseif a == "--tool" then opts.tool, i = args[i + 1], i + 1
 		end
 		i = i + 1
 	end
@@ -39,7 +45,9 @@ function love.load(args)
 	love.window.setTitle(info.name)
 
 	App = SimGolf.require("client/app")
-	App:init({ theme = opts.theme, seed = opts.seed })
+	App:init({ seed = opts.seed or os.time(), slot = opts.slot, sandbox = opts.sandbox })
+	if opts.demo then SimGolf.require("client/demo")(App) end
+	if opts.tool then App:setTool(opts.tool) end
 	if opts.view then
 		local x, z, zoom, rot = opts.view:match("^([-%d.]+),([-%d.]+),([%d.]+),(%d+)$")
 		if x then

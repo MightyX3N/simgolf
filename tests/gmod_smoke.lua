@@ -45,15 +45,15 @@ util = { Compress = function(s) return s end, Decompress = function(s) return s 
 net = { Receive = function() end }
 ScrW = function() return 1920 end; ScrH = function() return 1080 end
 Material = function(p) assert(exists(ADDON .. "materials/" .. p), "material missing: " .. p) return { Width = function() return 2048 end, Height = function() return 2048 end } end
-surface = { SetDrawColor = count("SetDrawColor"), DrawRect = count("DrawRect"), CreateFont = count("CreateFont"), SetMaterial = count("SetMaterial"), DrawTexturedRect = count("DrawTexturedRect"), DrawTexturedRectUV = function(x, y, w, h, u0, v0, u1, v1) calls.DrawTexturedRectUV = (calls.DrawTexturedRectUV or 0) + 1; assert(u0 >= 0 and v0 >= 0 and u1 <= 1 and v1 <= 1 and u0 < u1 and v0 < v1, "texture coordinates out of range") end, PlaySound = count("PlaySound") }
-draw = { SimpleText = count("SimpleText") }
+surface = { SetDrawColor = count("SetDrawColor"), DrawRect = count("DrawRect"), CreateFont = count("CreateFont"), SetMaterial = count("SetMaterial"), DrawTexturedRect = count("DrawTexturedRect"), DrawTexturedRectUV = function(x, y, w, h, u0, v0, u1, v1) calls.DrawTexturedRectUV = (calls.DrawTexturedRectUV or 0) + 1; assert(u0 >= 0 and v0 >= 0 and u1 <= 1 and v1 <= 1 and u0 < u1 and v0 < v1, "texture coordinates out of range") end, PlaySound = count("PlaySound"), DrawPoly = function(poly) calls.DrawPoly = (calls.DrawPoly or 0) + 1; assert(#poly >= 3 and poly[1].x and poly[1].y, "polygon points") end, SetFont = count("SetFont"), GetTextSize = function(t) return #t * 8, 16 end }
+draw = { SimpleText = count("SimpleText"), NoTexture = count("NoTexture") }
 TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP = 0, 1, 2, 3
 KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_SPACE, KEY_ESCAPE, KEY_ENTER, KEY_TAB = 88, 90, 89, 91, 65, 70, 64, 67
 KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E = 33, 11, 29, 14, 27, 15
 MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE = 107, 108, 109
 MATERIAL_TRIANGLES, MATERIAL_CULLMODE_CCW, MATERIAL_CULLMODE_NONE = 2, 0, 2
 local down = {}
-input = { IsKeyDown = function(c) return down[c] end, GetKeyName = function(c) return c == KEY_Q and "q" or "x" end }
+input = { IsKeyDown = function(c) return down[c] end, GetKeyName = function(c) return ({ [KEY_Q] = "q", [3] = "2", [4] = "3", [5] = "4" })[c] or "x" end }
 gui = { MouseX = function() return 960 end, MouseY = function() return 540 end }
 function Vector(x, y, z) return { x, y, z } end
 function Matrix() return { Translate = function() end, Scale = function() end } end
@@ -80,6 +80,16 @@ if REALM == "client" then
 	panel:OnMousePressed(MOUSE_LEFT); panel:OnCursorMoved(900, 500); panel:OnMouseReleased(MOUSE_LEFT)
 	panel:OnMouseWheeled(1)
 	panel:Paint(1920, 1080)
+	-- the course tools: terrain (2), height (3), build (4), each used once at the screen's centre
+	for _, key in ipairs({ 3, 4, 5 }) do
+		panel:OnKeyCodePressed(key)
+		panel:Paint(1920, 1080)
+		panel:OnCursorMoved(960, 540)
+		panel:OnMousePressed(MOUSE_LEFT); panel:OnCursorMoved(970, 545); panel:OnMouseReleased(MOUSE_LEFT)
+		panel:OnMousePressed(MOUSE_RIGHT); panel:OnMouseReleased(MOUSE_RIGHT)
+		panel:Paint(1920, 1080)
+	end
+	assert((calls.DrawPoly or 0) > 0, "cursor and icons drawn")
 	assert(GM.HUDShouldDraw() == false, "HUD hidden")
 	print(("vertices %d, meshes drawn %d, trees drawn %d, model matrix pushes %d"):format(verts, calls.MeshDraw or 0, calls.DrawTexturedRectUV or 0, calls.PushModelMatrix or 0))
 	print("gmod client ok")

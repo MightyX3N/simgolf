@@ -166,9 +166,14 @@ Each phase ends with something playable or usable; the LÖVE work comes last, bu
 
 **Phase 2 – Building a course**
 
-- [ ] Port land generation, terrain painting, elevation, hole building and par
-- [ ] Buildings, amenities, decorations; money and costs
-- [ ] Build drawer, tool rail and top bar from the UI previews
+- [x] Port land generation, terrain painting, elevation, hole building and par (parity tests against OpenSGolf)
+- [x] Buildings and ball washers with prices, upgrades and unlocks; money and costs
+- [ ] Paths, benches, flower beds, willows, bridges, landmarks, home sites; undo
+- [ ] Tree and landmark palettes (the original's recolouring)
+- [x] Build drawer, tool rail and top bar from the UI previews
+- [ ] Rebuild only the changed part of the terrain mesh while painting
+- [ ] A drawn border past the map's edge (sea for coastal properties, the theme's outskirts inland) instead of black
+- [ ] Smooth camera: continuous rotation, eased pan and zoom
 
 **Phase 3 – Golfers**
 
@@ -187,6 +192,16 @@ Each phase ends with something playable or usable; the LÖVE work comes last, bu
 
 - [ ] Properties and themes, tournaments, pro golfer, end-of-year, weather, wildlife, stories
 - [ ] Workshop release with the free set
+
+**3D view** (after Phase 3, so it has a living course to show)
+
+- [ ] Perspective camera: orbit, tilt (about 25–65°), zoom, edge-pan; the classic view as a toggle
+- [ ] Ground lit in real time, a water surface
+- [ ] Building and landmark models: the exporter carves them from the calibrated sprite views (visual hull, textured by
+      projecting the views); packs may ship hand-made ones. Meshes as Lua data plus a PNG, drawn through Platform meshes
+      (no .mdl); a building without a model keeps its sprite
+- [ ] Trees and golfers as view-picked billboards
+- [ ] GMod: the course drawn into the 3D world, players can walk it in first person
 
 **Phase 6 – Converter**
 

@@ -19,10 +19,15 @@ return function(Game)
 	end
 
 	-- the view to draw for a quarter-turn camera rotation: 4-view sprites turn with the camera, 1-view sprites never do
-	function Sprites.viewFor(entry, rot)
-		if entry.views <= 1 then return 0 end
-		if entry.views == 4 then return rot % 4 end
-		return (2 * rot) % entry.views
+	-- (OpenSGolf render.rs prop_view): eight views turn two a quarter; four and two views add the prop's own facing; a
+	-- fixed view (a flag, a tee marker) stays
+	function Sprites.viewFor(entry, rot, facing, fixed)
+		local views = entry.views
+		if fixed then return fixed % math.max(1, views) end
+		if views >= 8 then return (2 * rot) % 8 end
+		if views >= 4 then return (rot + (facing or 0)) % views end
+		if views == 2 then return (rot + (facing or 0)) % 2 end
+		return 0
 	end
 
 	local function drawFrame(entry, path, frame, sx, sy, zoom, r, g, b, a)
@@ -35,10 +40,24 @@ return function(Game)
 	end
 
 	-- Draw sprite `key` with its ground point at screen (sx, sy). `frame` counts within the view (0 .. fpv - 1).
-	function Sprites.draw(key, frame, view, sx, sy, zoom)
+	-- opts (optional): noShadow, noBody, r, g, b, a (the body's colour, e.g. a see-through or red preview)
+	function Sprites.draw(key, frame, view, sx, sy, zoom, opts)
 		local path, entry = Packs.spriteImage(key)
 		if not entry then return false end
 		local index = (view % entry.views) * entry.fpv + (frame % entry.fpv)
+		if opts then
+			if entry.shadow and not opts.noShadow then
+				local spath, sentry = Packs.spriteImage(entry.shadow)
+				if sentry then
+					drawFrame(sentry, spath, (view % sentry.views) * sentry.fpv + (frame % sentry.fpv), sx, sy, zoom, 0, 0, 0,
+						opts.a or 255)
+				end
+			end
+			if not opts.noBody then
+				drawFrame(entry, path, index, sx, sy, zoom, opts.r or 255, opts.g or 255, opts.b or 255, opts.a or 255)
+			end
+			return true
+		end
 		if entry.shadow then
 			local spath, sentry = Packs.spriteImage(entry.shadow)
 			if sentry then

@@ -70,6 +70,8 @@ return function(root)
 	function P.drawImageUV() P.draws.images = P.draws.images + 1 end
 	function P.drawRect() P.draws.rects = P.draws.rects + 1 end
 	function P.drawText() P.draws.texts = P.draws.texts + 1 end
+	function P.drawPoly() P.draws.polys = (P.draws.polys or 0) + 1 end
+	function P.textWidth(text, size) return #tostring(text) * (size or 16) * 0.5 end
 	function P.newMesh(img, verts) return { img = img, n = #verts / 8 } end
 	function P.drawMesh() P.draws.meshes = P.draws.meshes + 1 end
 	function P.freeMesh() end

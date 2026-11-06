@@ -9,11 +9,21 @@ local App
 function GM:HUDShouldDraw() return false end
 function GM:HUDDrawTargetID() end
 
+-- input and updates report errors once each instead of every frame
+local reported = {}
+local function safe(what, fn, ...)
+	local ok, err = pcall(fn, App, ...)
+	if not ok and not reported[tostring(err)] then
+		reported[tostring(err)] = true
+		ErrorNoHalt("[simgolf] " .. what .. ": " .. tostring(err) .. "\n")
+	end
+end
+
 local function openView()
 	if IsValid(SimGolf.panel) then SimGolf.panel:Remove() end
 
 	App = SimGolf.require("client/app")
-	App:init({})
+	App:init({ seed = os.time() })
 
 	local panel = vgui.Create("Panel")
 	SimGolf.panel = panel
@@ -37,30 +47,30 @@ local function openView()
 
 	function panel:Think()
 		if self:GetWide() ~= ScrW() or self:GetTall() ~= ScrH() then self:SetSize(ScrW(), ScrH()) end
-		App:update(FrameTime())
+		safe("update", App.update, FrameTime())
 	end
 
 	function panel:OnMousePressed(code)
 		self:MouseCapture(true)
-		App:mousePressed(gui.MouseX(), gui.MouseY(), P.MOUSE_NAMES[code] or tostring(code))
+		safe("mouse", App.mousePressed, gui.MouseX(), gui.MouseY(), P.MOUSE_NAMES[code] or tostring(code))
 	end
 
 	function panel:OnMouseReleased(code)
 		self:MouseCapture(false)
-		App:mouseReleased(gui.MouseX(), gui.MouseY(), P.MOUSE_NAMES[code] or tostring(code))
+		safe("mouse", App.mouseReleased, gui.MouseX(), gui.MouseY(), P.MOUSE_NAMES[code] or tostring(code))
 	end
 
 	function panel:OnCursorMoved(x, y)
-		App:mouseMoved(x, y)
+		safe("mouse", App.mouseMoved, x, y)
 	end
 
 	function panel:OnMouseWheeled(delta)
-		App:wheel(delta, self:GetWide(), self:GetTall())
+		safe("wheel", App.wheel, delta, self:GetWide(), self:GetTall())
 		return true
 	end
 
 	function panel:OnKeyCodePressed(code)
-		App:keyPressed(P.keyName(code))
+		safe("key", App.keyPressed, P.keyName(code))
 	end
 end
 
