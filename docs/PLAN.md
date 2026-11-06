@@ -162,7 +162,7 @@ Each phase ends with something playable or usable; the LÖVE work comes last, bu
 
 - [x] Repo, licence, build script, `Platform` interface
 - [x] Export the free set with `sgtool freeset` and `sgtool dump-data`; define the pack manifest
-- [x] 2D isometric renderer: terrain, camera pan/zoom/rotate, sprites from the active pack (checked in LÖVE; GMod still to be tried in the game)
+- [x] 2D isometric renderer: terrain, camera pan/zoom/rotate, sprites from the active pack (checked in LÖVE and in GMod)
 
 **Phase 2 – Building a course**
 
